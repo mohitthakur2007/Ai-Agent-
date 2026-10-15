@@ -1,13 +1,4 @@
-# Secret API keys
+
 .env
-
-# Python cache
-__pycache__/
-*.pyc
-
-# Virtual environment
 .venv/
-venv/
-
-# IDE files
-.vscode/
+__pycache__/
