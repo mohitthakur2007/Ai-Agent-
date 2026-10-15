@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>My AI Agent</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            white-space: pre-wrap;
+        }
+
+        .user {
+            background: #dbeafe;
+            text-align: right;
+        }
+
+        .bot {
+            background: #eeeeee;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>My AI Study Agent</h1>
+        <p>Ask anything you want to learn!</p>
+
+        <div id="chat-box">
+            <div class="message bot">
+                Hello! How can I help you?
+            </div>
+        </div>
+
+        <form id="chat-form">
+            <input
+                type="text"
+                id="question"
+                placeholder="Ask your question..."
+                required
+            >
+
+            <button type="submit">Send</button>
+        </form>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("chat-form");
+        const chatBox = document.getElementById("chat-box");
+        const input = document.getElementById("question");
+
+        function addMessage(text, type) {
+            const message = document.createElement("div");
+            message.className = "message " + type;
+            message.textContent = text;
+
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            return message;
+        }
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const question = input.value.trim();
+
+            if (!question) return;
+
+            addMessage(question, "user");
+            input.value = "";
+
+            const loading = addMessage("Thinking...", "bot");
+
+            try {
+                const response = await fetch(
+                    "/ask?question=" + encodeURIComponent(question)
+                );
+
+                if (!response.ok) {
+                    throw new Error("Server error");
+                }
+
+                const answer = await response.text();
+
+                loading.textContent = answer;
+
+            } catch (error) {
+                loading.textContent = "Something went wrong!";
+            }
+        });
+    </script>
+
+</body>
+</html>
