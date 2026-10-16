@@ -1,145 +1,223 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>My AI Agent</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        #chat-box {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 8px;
-            white-space: pre-wrap;
-        }
-
-        .user {
-            background: #dbeafe;
-            text-align: right;
-        }
-
-        .bot {
-            background: #eeeeee;
-        }
-
-        form {
-            display: flex;
-            gap: 10px;
-        }
-
-        input {
-            flex: 1;
-            padding: 12px;
-        }
-
-        button {
-            padding: 12px 20px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study Agent</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #172033; }
+    .app { max-width: 900px; margin: 30px auto; background: white; border-radius: 16px;
+           box-shadow: 0 8px 32px #14233b12; overflow: hidden; }
+    header { padding: 22px 26px; background: #323233; color: white; }
+    header h1 { margin: 0 0 6px; font-size: 25px; }
+    header p { margin: 0; opacity: .85; font-size: 14px; }
+    .toolbar { display: flex; gap: 12px; align-items: center; padding: 16px 22px;
+               border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+    select, input, button { font: inherit; }
+    select, input { border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; }
+    select { background: white; }
+    .chat { height: 460px; overflow-y: auto; padding: 24px; background: #fafcff; }
+    .bubble { padding: 13px 16px; margin: 12px 0; max-width: 85%; border-radius: 12px;
+              white-space: pre-wrap; line-height: 1.55; overflow-wrap: anywhere; }
+    .user { background: #dbeafe; margin-left: auto; }
+    .assistant { background: #eef2f7; margin-right: auto; }
+    .composer { display: flex; gap: 10px; padding: 18px 22px; border-top: 1px solid #e2e8f0; }
+    .composer input { flex: 1; min-width: 0; }
+    button { border: 0; border-radius: 8px; padding: 11px 16px;
+             background: #1d4ed8; color: white; cursor: pointer; }
+    button:hover { background: #1e40af; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .quiz { background: #fff; border: 1px solid #dbe4ef; border-radius: 12px;
+            padding: 18px; margin: 14px 0; }
+    .quiz h3 { margin-top: 0; }
+    .question { padding: 12px 0; border-top: 1px solid #eef2f7; }
+    .question p { font-weight: 600; }
+    .option { display: block; padding: 7px 0; cursor: pointer; }
+    .option input { margin-right: 9px; }
+    .result { padding: 12px; background: #eff6ff; margin-top: 14px;
+              border-radius: 8px; white-space: pre-wrap; line-height: 1.6; }
+    .download { margin: 0 0 12px 24px; font-size: 13px; }
+    @media (max-width: 600px) {
+      .app { margin: 0; border-radius: 0; min-height: 100vh; }
+      .chat { height: 60vh; padding: 14px; }
+      .bubble { max-width: 96%; }
+      .composer { padding: 12px; }
+    }
+  </style>
 </head>
-
 <body>
+  <main class="app">
+    <header>
+      <h1>AI Study Agent</h1>
+      <p>Learn concepts, take practice tests, and make revision notes.</p>
+    </header>
 
-    <div class="container">
-
-        <h1>My AI Study Agent</h1>
-        <p>Ask anything you want to learn!</p>
-
-        <div id="chat-box">
-            <div class="message bot">
-                Hello! How can I help you?
-            </div>
-        </div>
-
-        <form id="chat-form">
-            <input
-                type="text"
-                id="question"
-                placeholder="Ask your question..."
-                required
-            >
-
-            <button type="submit">Send</button>
-        </form>
-
+    <div class="toolbar">
+      <label for="mode">Study mode:</label>
+      <select id="mode">
+        <option value="auto">Auto (basic routing)</option>
+        <option value="explain">Explain</option>
+        <option value="quiz">Test</option>
+        <option value="notes">Notes</option>
+      </select>
     </div>
 
-    <script>
-        const form = document.getElementById("chat-form");
-        const chatBox = document.getElementById("chat-box");
-        const input = document.getElementById("question");
+    <section id="chat" class="chat" role="log" aria-live="polite">
+      <div class="bubble assistant">Hello! Try “Explain integration”, “Test me on biology”, or “Make notes on Newton's laws”.</div>
+    </section>
 
-        function addMessage(text, type) {
-            const message = document.createElement("div");
-            message.className = "message " + type;
-            message.textContent = text;
+    <form id="chat-form" class="composer">
+      <input id="message" type="text" maxlength="1500"
+             placeholder="Enter a topic or ask a question..." autocomplete="off" required>
+      <button id="send" type="submit">Send</button>
+    </form>
+  </main>
 
-            chatBox.appendChild(message);
-            chatBox.scrollTop = chatBox.scrollHeight;
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("message");
+    const mode = document.getElementById("mode");
+    const send = document.getElementById("send");
+    let sessionId = sessionStorage.getItem("study_agent_session") || null;
 
-            return message;
+    function addMessage(text, role = "assistant") {
+      const bubble = document.createElement("div");
+      bubble.className = "bubble " + role;
+      bubble.textContent = text; // Never insert model output as raw HTML.
+      chat.appendChild(bubble);
+      chat.scrollTop = chat.scrollHeight;
+      return bubble;
+    }
+
+    async function postJSON(url, payload) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request failed");
+      return data;
+    }
+
+    function addDownloadButton(notes) {
+      const button = document.createElement("button");
+      button.className = "download";
+      button.textContent = "Download notes (.txt)";
+      button.addEventListener("click", () => {
+        const blob = new Blob([notes], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "study-notes.txt";
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+      chat.appendChild(button);
+    }
+
+    function renderQuiz(quiz) {
+      const quizForm = document.createElement("form");
+      quizForm.className = "quiz";
+      const heading = document.createElement("h3");
+      heading.textContent = quiz.title;
+      quizForm.appendChild(heading);
+
+      quiz.questions.forEach((item, index) => {
+        const group = document.createElement("div");
+        group.className = "question";
+        const title = document.createElement("p");
+        title.textContent = (index + 1) + ". " + item.question;
+        group.appendChild(title);
+
+        item.options.forEach((choice, optionIndex) => {
+          const label = document.createElement("label");
+          label.className = "option";
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "question-" + index;
+          radio.value = String(optionIndex);
+          label.appendChild(radio);
+          label.appendChild(document.createTextNode(choice));
+          group.appendChild(label);
+        });
+        quizForm.appendChild(group);
+      });
+
+      const submit = document.createElement("button");
+      submit.type = "submit";
+      submit.textContent = "Submit test";
+      quizForm.appendChild(submit);
+
+      quizForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        const answers = quiz.questions.map((_, index) => {
+          const selected = quizForm.querySelector(`input[name="question-${index}"]:checked`);
+          return selected ? Number(selected.value) : null;
+        });
+        if (answers.includes(null)) {
+          alert("Please answer all five questions.");
+          return;
         }
 
-        form.addEventListener("submit", async function(event) {
-            event.preventDefault();
+        submit.disabled = true;
+        submit.textContent = "Checking...";
+        try {
+          const grade = await postJSON("/api/submit-quiz", {
+            session_id: sessionId, answers: answers
+          });
+          const result = document.createElement("div");
+          result.className = "result";
+          const details = grade.results.map(r =>
+            `Q${r.question}: ${r.correct ? "Correct" : "Incorrect"}\n` +
+            `Correct answer: ${r.correct_answer}\n${r.explanation}`
+          ).join("\n\n");
+          result.textContent = `Your score: ${grade.score}/${grade.total}\n\n${details}`;
+          quizForm.appendChild(result);
+          quizForm.querySelectorAll("input").forEach(radio => radio.disabled = true);
+          submit.textContent = "Test submitted";
+          chat.scrollTop = chat.scrollHeight;
+        } catch (error) {
+          addMessage("Could not check test: " + error.message);
+          submit.disabled = false;
+          submit.textContent = "Submit test";
+        }
+      });
+      chat.appendChild(quizForm);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-            const question = input.value.trim();
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      addMessage(message, "user");
+      input.value = "";
+      send.disabled = true;
+      const loading = addMessage("Thinking...");
 
-            if (!question) return;
-
-            addMessage(question, "user");
-            input.value = "";
-
-            const loading = addMessage("Thinking...", "bot");
-
-            try {
-                const response = await fetch(
-                    "/ask?question=" + encodeURIComponent(question)
-                );
-
-                if (!response.ok) {
-                    throw new Error("Server error");
-                }
-
-                const answer = await response.text();
-
-                loading.textContent = answer;
-
-            } catch (error) {
-                loading.textContent = "Something went wrong!";
-            }
+      try {
+        const data = await postJSON("/api/study", {
+          message: message, mode: mode.value, session_id: sessionId
         });
-    </script>
-
+        sessionId = data.session_id;
+        sessionStorage.setItem("study_agent_session", sessionId);
+        loading.remove();
+        if (data.mode === "quiz") {
+          renderQuiz(data.quiz);
+        } else {
+          addMessage(data.reply);
+          if (data.mode === "notes") addDownloadButton(data.reply);
+        }
+      } catch (error) {
+        loading.textContent = "Error: " + error.message;
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
 </body>
 </html>

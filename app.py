@@ -1,59 +1,49 @@
+"""Flask routes for the study agent. llm.py owns the Sarvam API client."""
 
-from sarvamai import SarvamAI
-from flask import Flask, render_template, request
-from dotenv import load_dotenv
-import os
+from flask import Flask, jsonify, render_template, request
+from agent import StudyAgent
 
-# Load API key
-load_dotenv()
-
-ApiKey = os.getenv("SARVAM_API_KEY")
-
-# Initialize Sarvam client
-client = SarvamAI(api_subscription_key=ApiKey)
-
-# Initialize Flask
 app = Flask(__name__)
+agent = StudyAgent()
 
 
-@app.route('/')
+@app.get("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/ask')
-def ask():
-    question = request.args.get("question", "").strip()
-
-    if not question:
-        return "Please enter a question.", 400
-
+@app.post("/api/study")
+def study():
+    data = request.get_json(silent=True) or {}
     try:
-        response = client.chat.completions(
-            model="sarvam-105b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a helpful AI study tutor. "
-                        "Explain concepts clearly with examples."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": question
-                }
-            ]
+        result = agent.study(
+            message=data.get("message", ""),
+            mode=data.get("mode", "auto"),
+            session_id=data.get("session_id"),
         )
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        app.logger.exception("Study-agent request failed")
+        return jsonify({"error": "AI request failed. Check the Flask terminal."}), 502
 
-        answer = response.choices[0].message.content
 
-        return answer or "No response generated."
-
-    except Exception as e:
-        print("Sarvam API Error:", str(e))
-        return "Something went wrong. Check terminal.", 500
+@app.post("/api/submit-quiz")
+def submit_quiz():
+    data = request.get_json(silent=True) or {}
+    try:
+        result = agent.grade_quiz(
+            session_id=data.get("session_id"),
+            answers=data.get("answers"),
+        )
+        return jsonify(result)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        app.logger.exception("Quiz grading failed")
+        return jsonify({"error": "Unable to grade the quiz."}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True)  # Development only. Disable debug for deployment.
